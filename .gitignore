@@ -3,16 +3,17 @@
 *.o
 *.out
 a.out
-
-# Build directories
+db
+# Build directories and dependencies
 build/
 bin/
-
-# IDE files
+node_modules/
+dist/
+.vercel/
+.env*
+# IDE and OS files
 .vscode/
 .idea/
 *.user
-
-# OS files
 .DS_Store
 Thumbs.db

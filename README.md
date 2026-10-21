@@ -1,3 +1,18 @@
+# VectorDB Studio — React interface
+
+A responsive React workspace for the C++ vector database: semantic search, interactive PCA map, vector CRUD and export, document embeddings, source-backed AI Q&A, algorithm benchmarks, and HNSW graph inspection. Includes keyboard focus styles, reduced-motion support, mobile navigation, request errors, loading states, and configurable engine connections.
+
+Start with [deployment and setup instructions](DEPLOYMENT.md).
+
+```sh
+npm ci
+npm run dev
+```
+
+The browser playground works immediately. Connect the C++/Ollama engine in Settings for documents, RAG, HNSW/KD-Tree search, and engine benchmarks. Vercel hosts the React UI; the C++ server and Ollama run separately. The original backend guide follows below.
+
+---
+
 # VectorDB — Build a Vector Database from Scratch in C++
 
 A fully working **Vector Database** built from scratch in C++ with a web UI.  

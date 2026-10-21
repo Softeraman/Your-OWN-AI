@@ -1,0 +1,15 @@
+services:
+  engine:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      OLLAMA_HOSTNAME: ollama
+    depends_on:
+      - ollama
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+volumes:
+  ollama:

@@ -15,6 +15,7 @@
 #include <functional>
 #include <fstream>
 #include <climits>
+#include <cstdlib>
 
 static const int DIMS = 16;   // demo vectors
 // Doc embeddings dimension is determined at runtime from Ollama's model output
@@ -766,7 +767,8 @@ void loadDemo(VectorDB& db) {
 int main() {
     VectorDB   db(DIMS);
     DocumentDB docDB;
-    OllamaClient ollama;
+    const char* ollamaHost = std::getenv("OLLAMA_HOSTNAME");
+    OllamaClient ollama(ollamaHost ? ollamaHost : "127.0.0.1", 11434);
 
     loadDemo(db);
 
@@ -1074,9 +1076,11 @@ int main() {
         res.set_content(ss.str(), "application/json");
     });
 
-    // Serve index.html
+    // React production assets; legacy UI remains available before npm run build.
+    svr.set_mount_point("/assets", "./dist/assets");
     svr.Get("/", [](const httplib::Request&, httplib::Response& res) {
-        std::ifstream f("index.html");
+        std::ifstream f("dist/index.html");
+        if (!f.is_open()) f.open("legacy.html");
         if (!f.is_open()) { res.status = 404; return; }
         res.set_content(
             std::string(std::istreambuf_iterator<char>(f),
@@ -1084,6 +1088,10 @@ int main() {
             "text/html");
     });
 
-    svr.listen("0.0.0.0", 8080);
+    int port = 8080;
+    if (const char* value = std::getenv("PORT")) {
+        try { port = std::stoi(value); } catch (...) {}
+    }
+    svr.listen("0.0.0.0", port);
     return 0;
 }
