@@ -454,7 +454,7 @@ function App() {
                     <div className="plot-caption">
                       SEMANTIC SPACE <span>01 / 02</span>
                     </div>
-                    <Map
+                    <SemanticMap
                       points={points}
                       selected={selected}
                       results={results}
@@ -1353,7 +1353,7 @@ function Empty({ icon: Icon, title, text, action, actionLabel }) {
     </div>
   );
 }
-function Map({ points, selected, results, onSelect }) {
+function SemanticMap({ points, selected, results, onSelect }) {
   const extent =
     Math.max(0.1, ...points.flatMap((p) => [Math.abs(p.x), Math.abs(p.y)])) *
     1.22;
