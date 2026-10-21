@@ -2,6 +2,8 @@
 
 A responsive React workspace for the C++ vector database: semantic search, interactive PCA map, vector CRUD and export, document embeddings, source-backed AI Q&A, algorithm benchmarks, and HNSW graph inspection. Includes keyboard focus styles, reduced-motion support, mobile navigation, request errors, loading states, and configurable engine connections.
 
+Live UI: **https://vectordb-studio.vercel.app** (browser playground; connect your engine for AI features).
+
 Start with [deployment and setup instructions](DEPLOYMENT.md).
 
 ```sh

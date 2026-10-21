@@ -1,10 +1,71 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import {embed,distance,search,project,request} from '../src/engine.js';
-const seed=JSON.parse(readFileSync(new URL('../src/seed.json',import.meta.url)));
-test('seed contains the C++ project’s 20 valid 16D vectors',()=>{assert.equal(seed.length,20);assert.ok(seed.every(x=>x.embedding.length===16&&x.embedding.every(Number.isFinite)));});
-test('keyword search finds the right semantic category for each dataset',()=>{for(const [q,cat] of [['binary tree','cs'],['calculus','math'],['sushi rice','food'],['basketball','sports']]){for(const metric of ['cosine','euclidean','manhattan'])assert.equal(search(seed,embed(q),3,metric)[0].category,cat);}});
-test('metrics have known values and search is ordered',()=>{assert.equal(distance([1,0],[0,1]),1);assert.equal(distance([1,0],[0,1],'manhattan'),2);assert.equal(distance([1,0],[0,1],'euclidean'),Math.sqrt(2));assert.equal(distance([0,0],[1,0]),1);const hits=search(seed,seed[0].embedding,5,'cosine');assert.equal(hits[0].id,seed[0].id);assert.ok(hits.every((x,i)=>i===0||x.distance>=hits[i-1].distance));});
-test('PCA projects empty, singleton and full collections to finite centered coordinates',()=>{assert.deepEqual(project([]),[]);for(const rows of [[seed[0]],seed]){const p=project(rows);assert.equal(p.length,rows.length);assert.ok(p.every(x=>Number.isFinite(x.x)&&Number.isFinite(x.y)));assert.ok(Math.abs(p.reduce((n,x)=>n+x.x,0))<1e-8);assert.ok(Math.abs(p.reduce((n,x)=>n+x.y,0))<1e-8);}});
-test('API adapter handles C++ JSON errors, status failures and CRUD requests',async()=>{const old=globalThis.fetch;try{globalThis.fetch=async(url,options)=>{assert.equal(url,'https://engine/insert');assert.equal(options.method,'POST');assert.deepEqual(JSON.parse(options.body),{metadata:'test'});return{ok:true,json:async()=>({id:21})};};assert.deepEqual(await request('https://engine','/insert',{metadata:'test'}),{id:21});globalThis.fetch=async()=>({ok:true,json:async()=>({error:'Ollama unavailable'})});await assert.rejects(()=>request('','/status'),/Ollama unavailable/);globalThis.fetch=async()=>({ok:false,status:503});await assert.rejects(()=>request('','/status'),/503/);}finally{globalThis.fetch=old;}});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { embed, distance, search, project, request } from "../src/engine.js";
+const seed = JSON.parse(
+  readFileSync(new URL("../src/seed.json", import.meta.url)),
+);
+test("seed contains the C++ project’s 20 valid 16D vectors", () => {
+  assert.equal(seed.length, 20);
+  assert.ok(
+    seed.every(
+      (x) => x.embedding.length === 16 && x.embedding.every(Number.isFinite),
+    ),
+  );
+});
+test("keyword search finds the right semantic category for each dataset", () => {
+  for (const [q, cat] of [
+    ["binary tree", "cs"],
+    ["calculus", "math"],
+    ["sushi rice", "food"],
+    ["basketball", "sports"],
+  ]) {
+    for (const metric of ["cosine", "euclidean", "manhattan"])
+      assert.equal(search(seed, embed(q), 3, metric)[0].category, cat);
+  }
+});
+test("metrics have known values and search is ordered", () => {
+  assert.equal(distance([1, 0], [0, 1]), 1);
+  assert.equal(distance([1, 0], [0, 1], "manhattan"), 2);
+  assert.equal(distance([1, 0], [0, 1], "euclidean"), Math.sqrt(2));
+  assert.equal(distance([0, 0], [1, 0]), 1);
+  const hits = search(seed, seed[0].embedding, 5, "cosine");
+  assert.equal(hits[0].id, seed[0].id);
+  assert.ok(
+    hits.every((x, i) => i === 0 || x.distance >= hits[i - 1].distance),
+  );
+});
+test("PCA projects empty, singleton and full collections to finite centered coordinates", () => {
+  assert.deepEqual(project([]), []);
+  for (const rows of [[seed[0]], seed]) {
+    const p = project(rows);
+    assert.equal(p.length, rows.length);
+    assert.ok(p.every((x) => Number.isFinite(x.x) && Number.isFinite(x.y)));
+    assert.ok(Math.abs(p.reduce((n, x) => n + x.x, 0)) < 1e-8);
+    assert.ok(Math.abs(p.reduce((n, x) => n + x.y, 0)) < 1e-8);
+  }
+});
+test("API adapter handles C++ JSON errors, status failures and CRUD requests", async () => {
+  const old = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url, options) => {
+      assert.equal(url, "https://engine/insert");
+      assert.equal(options.method, "POST");
+      assert.deepEqual(JSON.parse(options.body), { metadata: "test" });
+      return { ok: true, json: async () => ({ id: 21 }) };
+    };
+    assert.deepEqual(
+      await request("https://engine", "/insert", { metadata: "test" }),
+      { id: 21 },
+    );
+    globalThis.fetch = async () => ({
+      ok: true,
+      json: async () => ({ error: "Ollama unavailable" }),
+    });
+    await assert.rejects(() => request("", "/status"), /Ollama unavailable/);
+    globalThis.fetch = async () => ({ ok: false, status: 503 });
+    await assert.rejects(() => request("", "/status"), /503/);
+  } finally {
+    globalThis.fetch = old;
+  }
+});
