@@ -73,6 +73,10 @@ export function project(items) {
   return items.map((p, i) => ({ ...p, x: dot(x[i], a), y: dot(x[i], b) }));
 }
 export async function request(base, path, body, method) {
+  if (base === "browser") {
+    const { localRequest } = await import("./browser/client.js");
+    return localRequest(path, body, method);
+  }
   const response = await fetch(base + path, {
     method: method || (body ? "POST" : "GET"),
     headers: body ? { "Content-Type": "application/json" } : undefined,

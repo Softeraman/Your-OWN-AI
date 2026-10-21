@@ -1400,3 +1400,22 @@ main {
     transition: none !important;
   }
 }
+.model-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 14px 17px;
+  background: #24331f;
+  border: 1px solid #455e37;
+  border-radius: 7px;
+  color: #c6e3b2;
+  font-size: 11px;
+}
+.model-progress progress {
+  margin-left: auto;
+  width: 140px;
+  max-width: 30%;
+  height: 7px;
+  accent-color: #b8e693;
+}

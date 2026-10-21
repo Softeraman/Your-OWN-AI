@@ -43,9 +43,15 @@ const read = (key, fallback) => {
   }
 };
 function App() {
+  const [modelProgress, setModelProgress] = useState(null);
+  useEffect(() => {
+    const handler = (e) => setModelProgress(e.detail.label ? e.detail : null);
+    window.addEventListener("vdb-progress", handler);
+    return () => window.removeEventListener("vdb-progress", handler);
+  }, []);
   const [page, setPage] = useState("Explore"),
     [items, setItems] = useState(() => read("vdb-vectors", seed)),
-    [base, setBase] = useState(() => read("vdb-server", "")),
+    [base, setBase] = useState(() => read("vdb-server", "browser")),
     [connected, setConnected] = useState(false),
     [status, setStatus] = useState(null),
     [modal, setModal] = useState(null),
@@ -99,7 +105,7 @@ function App() {
           setConnected(true);
         }
       } catch (e) {
-        if (!cancelled) setError("Cannot reach the C++ server. " + e.message);
+        if (!cancelled) setError("Cannot connect to the engine. " + e.message);
       }
     })();
     return () => {
@@ -152,7 +158,7 @@ function App() {
   const apiReady = () => {
     if (!connected)
       throw new Error(
-        "Connect your C++ server in Settings to use this feature.",
+        "The engine is starting. If it does not connect, select Free browser engine in Settings.",
       );
   };
   const doSearch = () =>
@@ -262,7 +268,11 @@ function App() {
           <div className="engine-card">
             <div>
               <span className="live-dot" />
-              {connected ? "C++ engine connected" : "Browser playground"}
+              {base === "browser"
+                ? "Free browser engine"
+                : connected
+                  ? "C++ engine connected"
+                  : "Browser playground"}
               <ArrowUpRight size={14} />
             </div>
             <p>
@@ -313,7 +323,9 @@ function App() {
             <span className="mode">
               <span className="live-dot" />
               {connected
-                ? "Engine online"
+                ? base === "browser"
+                  ? "Free · on-device"
+                  : "Engine online"
                 : base
                   ? "Engine offline"
                   : "Demo mode"}
@@ -395,9 +407,11 @@ function App() {
                 Files,
                 "Document chunks",
                 docs.length,
-                status?.ollamaAvailable
-                  ? "Ollama connected"
-                  : "Connect Ollama to embed",
+                base === "browser"
+                  ? "384D · on-device AI"
+                  : status?.ollamaAvailable
+                    ? "Ollama connected"
+                    : "Connect Ollama to embed",
               ],
             ].map(([Icon, label, value, sub]) => (
               <div className="stat" key={label}>
@@ -413,6 +427,15 @@ function App() {
               </div>
             ))}
           </section>
+          {modelProgress && (
+            <div className="model-progress" role="status">
+              <LoaderCircle className="spin" size={16} />
+              <span>{modelProgress.label}</span>
+              {Number.isFinite(modelProgress.progress) && (
+                <progress max="100" value={modelProgress.progress} />
+              )}
+            </div>
+          )}
           {page === "Explore" && (
             <>
               <div className="explore-grid">
@@ -561,9 +584,11 @@ function App() {
                     </button>
                     <p className="hint">
                       <span className="live-dot" />
-                      {base
-                        ? "Search runs on your C++ engine"
-                        : "Demo: exact search with keyword-based 16D vectors"}
+                      {base === "browser"
+                        ? "Browser algorithms · keyword-based 16D demo vectors"
+                        : base
+                          ? "Search runs on your C++ engine"
+                          : "Demo: exact search with keyword-based 16D vectors"}
                     </p>
                   </form>
                 </section>
@@ -675,9 +700,11 @@ function App() {
                 <div>
                   <h2>Vector collection</h2>
                   <p>
-                    {base
-                      ? "Stored in the C++ engine"
-                      : "Saved in this browser"}
+                    {base === "browser"
+                      ? "Saved privately on this device"
+                      : base
+                        ? "Stored in the C++ engine"
+                        : "Saved in this browser"}
                   </p>
                 </div>
                 <div className="actions">
@@ -761,7 +788,11 @@ function App() {
                 <Empty
                   icon={Files}
                   title="Give your AI something to know"
-                  text="Add notes, articles, or research. Your C++ server uses Ollama to embed every chunk."
+                  text={
+                    base === "browser"
+                      ? "Add notes, articles, or research. Real 384D embeddings run privately on your device."
+                      : "Your C++ server uses Ollama to embed every chunk."
+                  }
                   action={() => setModal("document")}
                   actionLabel="Add your first document"
                 />
@@ -838,6 +869,7 @@ function App() {
                   <input
                     id="question"
                     name="question"
+                    maxLength={1000}
                     required
                     placeholder="What would you like to understand?"
                   />
@@ -851,8 +883,9 @@ function App() {
                   </button>
                 </div>
                 <p className="hint">
-                  Connect your engine and Ollama in Settings to generate
-                  answers.
+                  {base === "browser"
+                    ? "Free on-device AI. Models download on first use and are cached. Small-model answers may be imperfect; check the source text."
+                    : "Connect your engine and Ollama in Settings to generate answers."}
                 </p>
               </form>
             </section>
@@ -863,8 +896,9 @@ function App() {
                 <div>
                   <h2>Measure the difference</h2>
                   <p>
-                    Real C++ timings for the same vector, metric, and neighbor
-                    count.
+                    {base === "browser"
+                      ? "Measured on this device. Average of 30 searches per algorithm, excluding index construction."
+                      : "Real C++ timings for the same query."}
                   </p>
                 </div>
                 <Activity size={20} />
@@ -938,14 +972,14 @@ function App() {
                   ))}
                   <p className="hint">
                     Measured on {benchmark.itemCount} vectors. Timings vary with
-                    server load.
+                    {base === "browser" ? "device load" : "server load"}.
                   </p>
                 </div>
               ) : (
                 <Empty
                   icon={Activity}
                   title="Let the numbers speak"
-                  text="Connect the C++ engine, then compare HNSW, KD-Tree, and brute force."
+                  text="Run a query to compare HNSW, KD-Tree, and brute force."
                 />
               )}
             </section>
@@ -986,7 +1020,7 @@ function App() {
                 <Empty
                   icon={Network}
                   title="A closer look at your index"
-                  text="Connect your C++ server to inspect HNSW layers, nodes, and graph edges."
+                  text="Refresh the index to inspect HNSW layers, nodes, and graph edges."
                 />
               )}
             </section>
@@ -1036,8 +1070,32 @@ function App() {
                 </span>
                 <h2>Connect your engine</h2>
                 <p>
-                  The UI runs on Vercel. Your C++ server handles indexing and
-                  Ollama runs your AI models.
+                  Free browser mode runs search and AI on this device. Documents
+                  stay in browser storage. You can also connect your original
+                  C++/Ollama engine.
+                </p>
+                <button
+                  className="primary full"
+                  onClick={() => {
+                    localStorage.setItem(
+                      "vdb-server",
+                      JSON.stringify("browser"),
+                    );
+                    setBase("browser");
+                    setModal(null);
+                    setResults([]);
+                    setAnswer(null);
+                    setGraph(null);
+                    setBenchmark(null);
+                    setNotice("Free browser engine selected");
+                  }}
+                >
+                  Use free browser engine <Sparkles size={15} />
+                </button>
+                <p className="hint">
+                  No API key or paid server. AI downloads model files from
+                  Hugging Face on first use. AI runs on this device; speed
+                  depends on its performance. Export data to keep a backup.
                 </p>
                 <form
                   onSubmit={(e) => {
@@ -1059,12 +1117,12 @@ function App() {
                     });
                   }}
                 >
-                  <label htmlFor="server-url">C++ server URL</label>
+                  <label htmlFor="server-url">Optional C++ server URL</label>
                   <input
                     id="server-url"
                     type="url"
                     name="url"
-                    defaultValue={base}
+                    defaultValue={base === "browser" ? "" : base}
                     placeholder="https://your-engine.example.com"
                     required
                   />
@@ -1081,7 +1139,7 @@ function App() {
                 <button
                   className="secondary full"
                   onClick={() => {
-                    localStorage.removeItem("vdb-server");
+                    localStorage.setItem("vdb-server", JSON.stringify(""));
                     setBase("");
                     setItems(read("vdb-vectors", seed));
                     setResults([]);
@@ -1091,11 +1149,12 @@ function App() {
                     setModal(null);
                   }}
                 >
-                  Use browser demo
+                  Use lightweight demo
                 </button>
                 <p className="hint">
-                  Demo supports vector CRUD, PCA, and exact search. Documents,
-                  AI, benchmarks, and HNSW inspection require your engine.
+                  Browser demo is the lightweight keyword playground. Choose the
+                  free browser engine above for documents, local AI, all search
+                  algorithms, and index inspection.
                 </p>
               </>
             ) : modal.delete ? (
@@ -1130,7 +1189,9 @@ function App() {
                 </h2>
                 <p>
                   {modal === "document"
-                    ? "Your text is split into overlapping 250-word chunks and embedded with Ollama."
+                    ? base === "browser"
+                      ? "Text is split into overlapping 180-word chunks and embedded on this device. First use downloads the embedding model (about 23 MB)."
+                      : "Your text is split into overlapping 250-word chunks and embedded with Ollama."
                     : "Add a concept using the project’s keyword embedding, or enter a custom 16D vector."}
                 </p>
                 <form

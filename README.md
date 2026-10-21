@@ -2,7 +2,7 @@
 
 A responsive React workspace for the C++ vector database: semantic search, interactive PCA map, vector CRUD and export, document embeddings, source-backed AI Q&A, algorithm benchmarks, and HNSW graph inspection. Includes keyboard focus styles, reduced-motion support, mobile navigation, request errors, loading states, and configurable engine connections.
 
-Live UI: **https://vectordb-studio.vercel.app** (browser playground; connect your engine for AI features).
+Live app: **https://vectordb-studio.vercel.app** — free browser engine with local document embeddings and AI answers. No paid backend or API key.
 
 Start with [deployment and setup instructions](DEPLOYMENT.md).
 
@@ -11,13 +11,13 @@ npm ci
 npm run dev
 ```
 
-The browser playground works immediately. Connect the C++/Ollama engine in Settings for documents, RAG, HNSW/KD-Tree search, and engine benchmarks. Vercel hosts the React UI; the C++ server and Ollama run separately. The original backend guide follows below.
+The browser engine supports vector CRUD, three search algorithms and metrics, PCA, benchmarks, HNSW graph inspection, document embeddings, and source-backed AI answers. Models download on first use, and documents stay on the visitor’s device. The on-device models are smaller than Ollama models, so verify generated answers against the source text. The original C++/Ollama engine remains an optional connection in Settings. See DEPLOYMENT.md for details; the original backend guide follows below.
 
 ---
 
 # VectorDB — Build a Vector Database from Scratch in C++
 
-A fully working **Vector Database** built from scratch in C++ with a web UI.  
+A fully working **Vector Database** built from scratch in C++ with a web UI.
 Implements **HNSW**, **KD-Tree**, and **Brute Force** search algorithms side-by-side, plus a **RAG pipeline** powered by a local LLM via Ollama.
 
 > Built as an educational project to show how production vector databases like Pinecone, Weaviate, and Chroma actually work under the hood.
